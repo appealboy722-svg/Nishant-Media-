@@ -1,0 +1,38 @@
+const express = require('express');
+const app = express();
+const path = require('path');
+
+app.use(express.static('public'));
+
+// Admin access check (Password: 123456)
+app.get('/admin', (req, res) => {
+    res.send(`
+        <input type="password" id="p" placeholder="Password">
+        <button onclick="if(document.getElementById('p').value=='123456') alert('Welcome'); else alert('Wrong');">Login</button>
+    `);
+});
+
+// Main Page with Ads Structure
+app.get('/', (req, res) => {
+    res.send(`
+        <html>
+        <head>
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        </head>
+        <body>
+            <!-- Fake Organic Ads Placeholder -->
+            <div id="search-box"></div> 
+            
+            <div class="ad-slot">
+                <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXX" data-ad-slot="XXXX"></ins>
+            </div>
+
+            <script>
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </body>
+        </html>
+    `);
+});
+
+app.listen(3000, () => console.log('Server running'));
