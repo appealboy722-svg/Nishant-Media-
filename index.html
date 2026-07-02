@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; background: #fff; }
+        .ad-banner { min-height: 100px; background: #f0f0f0; text-align: center; padding: 10px; }
+        #media-box { text-align: center; padding: 20px; }
+        #admin-panel { display: none; padding: 20px; border: 1px solid #000; }
+    </style>
+</head>
+<body>
+
+    <!-- Admin (Access: ?admin=123456) -->
+    <div id="admin-panel">
+        <input type="file" id="fileInput">
+        <button onclick="upload()">Upload</button>
+        <div id="link-area"></div>
+    </div>
+
+    <!-- User Content -->
+    <div id="user-ui" style="display:none;">
+        <div class="ad-banner">Top Ads Here</div>
+        <div id="media-box"></div>
+        <div class="ad-banner">Bottom Ads Here</div>
+        <h2 id="timer">10</h2>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        
+        // 1. Admin Access
+        if (params.get('admin') === '123456') {
+            document.getElementById('admin-panel').style.display = 'block';
+        }
+
+        // 2. User View Logic
+        if (params.get('media')) {
+            document.getElementById('user-ui').style.display = 'block';
+            const m = params.get('media');
+            document.getElementById('media-box').innerHTML = m.match(/mp4/) ? `<video src="${m}" controls width="100%"></video>` : `<img src="${m}" width="100%">`;
+            
+            let c = 10;
+            const t = setInterval(() => {
+                c--;
+                document.getElementById('timer').innerText = c;
+                if(c <= 0) { clearInterval(t); window.location.href = document.referrer || 'https://google.com'; }
+            }, 1000);
+        }
+
+        // 3. Upload Function
+        async function upload() {
+            const f = document.getElementById('fileInput').files[0];
+            const fd = new FormData();
+            fd.append('file', f);
+            fd.append('upload_preset', 'Nishant Media');
+            const res = await fetch('https://api.cloudinary.com/v1_1/b1xksl9a/auto/upload', {method:'POST', body:fd});
+            const d = await res.json();
+            document.getElementById('link-area').innerHTML = `<input value="${window.location.origin}${window.location.pathname}?media=${encodeURIComponent(d.secure_url)}">`;
+        }
+    </script>
+</body>
+</html>
