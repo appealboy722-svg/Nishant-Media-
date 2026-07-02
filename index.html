@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nishant Media</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; background: #000; color: #39ff14; font-family: monospace; overflow: hidden; }
+        
+        /* Admin Panel */
+        #admin-panel { display: none; height: 100vh; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 9999; }
+        
+        /* User UI Structure */
+        .ui-wrapper { display: none; flex-direction: column; height: 100vh; justify-content: space-between; }
+        
+        /* Ad Banners - Fixed size to not touch media */
+        .ad-banner { height: 15vh; background: #000; display: flex; align-items: center; justify-content: center; border: 1px dashed #39ff14; }
+        
+        /* Media Area - Middle space */
+        .media-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 5px; }
+        
+        #timer { text-align: center; font-size: 20px; color: #ff073a; padding: 5px; }
+    </style>
+</head>
+<body>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel">
+        <h1>ADMIN DASHBOARD</h1>
+        <input type="file" id="f">
+        <button onclick="up()">Upload</button>
+        <div id="link-area"></div>
+    </div>
+
+    <!-- User UI -->
+    <div class="ui-wrapper" id="user-ui">
+        <div class="ad-banner">TOP AD SLOT</div>
+        <div class="media-container" id="media-box"></div>
+        <div class="ad-banner">BOTTOM AD SLOT</div>
+        <div id="timer">Redirecting: 10</div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        
+        if (params.get('admin') === '123456') {
+            document.getElementById('admin-panel').style.display = 'flex';
+        } 
+        else if (params.get('media')) {
+            document.getElementById('user-ui').style.display = 'flex';
+            const m = decodeURIComponent(params.get('media'));
+            document.getElementById('media-box').innerHTML = m.match(/\.(mp4|mov)$/) 
+                ? `<video src="${m}" controls style="max-height:100%; max-width:100%"></video>` 
+                : `<img src="${m}" style="max-height:100%; max-width:100%">`;
+
+            let c = 10;
+            const t = setInterval(() => {
+                c--;
+                document.getElementById('timer').innerText = "Redirecting: " + c;
+                if(c <= 0) { 
+                    clearInterval(t); 
+                    const ref = document.referrer;
+                    if(ref.includes('facebook.com')) window.location.href = 'https://facebook.com';
+                    else if(ref.includes('pinterest.com')) window.location.href = 'https://pinterest.com';
+                    else if(ref.includes('snapchat.com')) window.location.href = 'https://snapchat.com';
+                    else window.location.href = 'https://google.com';
+                }
+            }, 1000);
+        }
+
+        async function up() {
+            const f = document.getElementById('f').files[0];
+            const fd = new FormData();
+            fd.append('file', f);
+            fd.append('upload_preset', 'Nishant Media');
+            const res = await fetch('https://api.cloudinary.com/v1_1/b1xksl9a/auto/upload', {method:'POST', body:fd});
+            const d = await res.json();
+            const link = window.location.origin + window.location.pathname + '?media=' + encodeURIComponent(d.secure_url);
+            document.getElementById('link-area').innerHTML = `<input value="${link}" id="c" style="width:80%;"><button onclick="copy()">Copy</button>`;
+        }
+
+        function copy() {
+            document.getElementById("c").select();
+            document.execCommand("copy");
+            alert("Copied!");
+        }
+    </script>
+</body>
+</html>
