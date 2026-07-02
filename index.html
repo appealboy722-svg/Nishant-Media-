@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Portal</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; overflow: hidden; }
+        .wrapper { display: flex; flex-direction: column; height: 100vh; }
+        .ad-banner { height: 15vh; background: #eee; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; }
+        .content { flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+        #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: none; padding: 20px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <!-- Admin Panel (Access: ?admin=123456) -->
+    <div id="admin-panel">
+        <h2>Admin Dashboard</h2>
+        <input type="file" id="fileInput">
+        <button onclick="upload()">Upload & Generate Link</button>
+        <div id="link-area" style="margin-top:20px;"></div>
+    </div>
+
+    <!-- User Interface -->
+    <div class="wrapper" id="user-ui" style="display:none;">
+        <div class="ad-banner" id="top-ad">Google Ads Space</div>
+        <div class="content" id="media-box"></div>
+        <div class="ad-banner" id="bottom-ad">Google Ads Space</div>
+        <div id="timer" style="text-align:center; padding:10px; font-weight:bold;">Redirecting in: 10</div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+
+        // Admin Access
+        if (params.get('admin') === '123456') {
+            document.getElementById('admin-panel').style.display = 'block';
+        }
+
+        // User Redirection & Media Logic
+        if (params.get('media')) {
+            document.getElementById('user-ui').style.display = 'flex';
+            const m = decodeURIComponent(params.get('media'));
+            const container = document.getElementById('media-box');
+            
+            // Show Image or Video
+            if(m.match(/\.(mp4|webm|mov)$/)) {
+                container.innerHTML = `<video src="${m}" controls style="max-width:100%; max-height:80vh;"></video>`;
+            } else {
+                container.innerHTML = `<img src="${m}" style="max-width:100%; max-height:80vh;">`;
+            }
+
+            // Redirect Timer (10s)
+            let c = 10;
+            const t = setInterval(() => {
+                c--;
+                document.getElementById('timer').innerText = "Redirecting in: " + c;
+                if(c <= 0) { 
+                    clearInterval(t); 
+                    window.location.href = document.referrer || 'https://google.com'; 
+                }
+            }, 1000);
+        }
+
+        // Upload to Cloudinary
+        async function upload() {
+            const f = document.getElementById('fileInput').files[0];
+            if(!f) return alert('Select file');
+            const fd = new FormData();
+            fd.append('file', f);
+            fd.append('upload_preset', 'Nishant Media');
+            
+            const res = await fetch('https://api.cloudinary.com/v1_1/b1xksl9a/auto/upload', {method:'POST', body:fd});
+            const d = await res.json();
+            const fullLink = window.location.origin + window.location.pathname + '?media=' + encodeURIComponent(d.secure_url);
+            document.getElementById('link-area').innerHTML = `Copy Link: <input type="text" value="${fullLink}" style="width:80%;">`;
+        }
+    </script>
+</body>
+</html>
